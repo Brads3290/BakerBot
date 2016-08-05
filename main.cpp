@@ -3,6 +3,8 @@
 #include <map>
 #include <algorithm>
 #include <fstream>
+#include <ctime>
+#include <windows.h>
 
 using std::vector;
 using std::ofstream;
@@ -51,7 +53,11 @@ bool isPrime(int candidate) {
 }
 
 map<int, int> _howManyFactors;
-int howManyFactors(int inputNumber) {
+int howManyFactors(unsigned int inputNumber) {
+    if (inputNumber == 0) {
+        return 0;
+    }
+
     //Check for previously cached results.
     if (_howManyFactors.find(inputNumber) != _howManyFactors.end()) {
         //Found cached result.
@@ -59,20 +65,54 @@ int howManyFactors(int inputNumber) {
     }
 
     //No cached results. Calculate.
-    int numOfFactors = 0;
-    for (int i = 1; i <= inputNumber; i++) { // Look for factors
-        if (inputNumber % i == 0) { // divides without remainder
-            numOfFactors++; // Found another factor of `inputNumber`
+    int numFactors = 1;
+    int prime;
+    int power;
+    for (int i = 1, numPrimes = _primes.size(); i < numPrimes; ++i) { //Do not include the first prime
+        power = 0;
+        prime = _primes[i];
+        while (inputNumber % prime == 0) {
+            inputNumber /= prime;
+            power++;
+        }
+
+        numFactors *= power + 1;
+
+        if (inputNumber == 1) {
+            break;
+        }
+
+        if (i + 1 == numPrimes) {
+            calculatePrimesUpTo(calculatedUpTo + 100);
+            numPrimes = _primes.size();
         }
     }
 
     //Cache calculated result.
-    _howManyFactors[inputNumber] = numOfFactors;
+    _howManyFactors[inputNumber] = numFactors;
 
-    return numOfFactors;
+    return numFactors;
 }
+vector<unsigned int> highlyComposites = {1, 2, 4};
+unsigned int HCCalculatedUpTo = 4;
+bool numIsHighlyComposite(unsigned int candidate) {
+    return howManyFactors(candidate) > howManyFactors(highlyComposites[highlyComposites.size() - 1]);
+}
+void HCCalculateUpTo(unsigned int limit) {
+    while (limit > HCCalculatedUpTo) {
+        if (numIsHighlyComposite(++HCCalculatedUpTo)) {
+            highlyComposites.push_back(HCCalculatedUpTo);
+        }
+    }
+}
+bool isHighlyComposite(unsigned int candidate) {
+    if (candidate > HCCalculatedUpTo) {
+        HCCalculateUpTo(candidate);
+    }
 
-bool isHighlyComposite(int candidate) {
+    return find(highlyComposites.begin(), highlyComposites.end(), candidate) != highlyComposites.end();
+}
+bool isHighlyCompositeOld(unsigned int candidate) {
     int mostFactors = 0;
 
     for (int i = 0; i < candidate; i++) { // Loops `candidate` times. `i` is a number below `candidate`
@@ -94,7 +134,7 @@ int main() {
     fout << endl << endl << "----------- New Calculation -------------" << endl;
 
     int numberOfItemsInSeries = 40;
-    for (int i = 0, j = 0; j < numberOfItemsInSeries; i++) { // Loops for how many numbers to find
+    for (unsigned int i = 0, j = 0; j < numberOfItemsInSeries; i++) { // Loops for how many numbers to find
         if (isPrime(i) && isHighlyComposite(i - 1)) { // If bakery number
             j++;
 
