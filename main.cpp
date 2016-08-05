@@ -12,35 +12,34 @@ using std::map;
 
 vector<int> _primes = {1, 2, 3, 5}; //Store previously calculated primes, initialize with the first few.
 unsigned int calculatedUpTo = 5; //Keep track of how far we've calculated
+
+//Find if a specific number is prime, without cache checking
+bool numIsPrime(int candidate) {
+    //All numbers except primes can be made up of smaller primes.
+    //Thus, check for divisibility of all smaller primes. If it is not divisible,
+    //it is a prime.
+
+    //Check if a number is divisible by any of the lower primes
+    for (int j = 1; j < _primes.size(); ++j) { //Need to start at j = 1 because _primes[0] is 1
+        if (candidate % _primes[j] == 0) {
+            return false; //Not a prime
+        }
+    }
+
+    return true;
+}
+//Screen all numbers up the 'limit' for primes
 void calculatePrimesUpTo(int limit) {
     //Run through all the numbers between the current highest calculation and the desired
     //highest calculation
     while (calculatedUpTo < limit) {
-        calculatedUpTo++;
-
-        //Use a try/catch to immediately escape as soon as the number is eliminated as a prime
-        try {
-            //Check if a number is divisible by 2, 3, 4, 5 or 6
-            for (int i = 2; i <= 6; ++i) {
-                if (calculatedUpTo % i == 0) {
-                    throw false; //Not a prime
-                }
-            }
-
-            //Check if a number is divisible by any of the lower primes
-            for (int j = 1; j < _primes.size(); ++j) { //Need to start at j = 1 because _primes[0] is 1
-                if (calculatedUpTo % _primes[j] == 0) {
-                    throw false; //Not a prime
-                }
-            }
-
-            //If reached this point, the number is a prime.
+        if (numIsPrime(++calculatedUpTo)) {
+            //Number is a prime.
             _primes.push_back(calculatedUpTo);
-        } catch (bool) {
-            continue; //Technically a redundant statement, but here for code readability
         }
     }
 }
+//Find if a number is prime, using cache checking and screening all numbers before it
 bool isPrime(int candidate) {
     //If we haven't already calculated this, do so
     if (candidate > calculatedUpTo) {
